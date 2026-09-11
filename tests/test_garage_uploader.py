@@ -1,0 +1,56 @@
+import sys
+import time
+from pathlib import Path
+from unittest.mock import MagicMock
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from scripts.garage_uploader import _is_ignorable, upload_file  # noqa: E402
+from scripts.utils.state_store import StateStore  # noqa: E402
+
+
+def test_is_ignorable_skips_temp_and_dotfiles(tmp_path):
+    tmp_file = tmp_path / "data.tmp"
+    tmp_file.write_text("x")
+    dotfile = tmp_path / ".hidden.json"
+    dotfile.write_text("x")
+    real_file = tmp_path / "data.json"
+    real_file.write_text("x")
+
+    assert _is_ignorable(tmp_file) is True
+    assert _is_ignorable(dotfile) is True
+    assert _is_ignorable(real_file) is False
+
+
+def test_upload_file_is_idempotent(tmp_path):
+    sensor_file = tmp_path / "reading.json"
+    sensor_file.write_text('[{"sensor_id": "s1", "value": 1}]')
+
+    state = StateStore(tmp_path / "state.json")
+    s3_client = MagicMock()
+
+    ok1 = upload_file(s3_client, sensor_file, state)
+    ok2 = upload_file(s3_client, sensor_file, state)
+
+    assert ok1 is True
+    assert ok2 is True
+    s3_client.put_object.assert_called_once()  # second call was a no-op due to state store
+
+
+def test_upload_file_retries_then_succeeds(tmp_path, monkeypatch):
+    from botocore.exceptions import ClientError
+
+    sensor_file = tmp_path / "reading2.json"
+    sensor_file.write_text('[{"sensor_id": "s1", "value": 1}]')
+
+    state = StateStore(tmp_path / "state2.json")
+    s3_client = MagicMock()
+    error = ClientError({"Error": {"Code": "500", "Message": "boom"}}, "PutObject")
+    s3_client.put_object.side_effect = [error, None]
+
+    monkeypatch.setattr(time, "sleep", lambda *_: None)  # skip real backoff delay in tests
+
+    ok = upload_file(s3_client, sensor_file, state)
+
+    assert ok is True
+    assert s3_client.put_object.call_count == 2

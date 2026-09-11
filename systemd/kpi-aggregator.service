@@ -1,0 +1,17 @@
+[Unit]
+Description=KPI Aggregator (windows -> hourly/daily rollups)
+After=ec2-kpi-poller.service
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/opt/kpidatareporttf
+EnvironmentFile=/opt/kpidatareporttf/.env
+ExecStart=/usr/bin/python3 /opt/kpidatareporttf/scripts/kpi_aggregator.py --watch --interval 60
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
