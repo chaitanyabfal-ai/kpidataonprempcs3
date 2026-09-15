@@ -26,7 +26,7 @@ def test_is_ignorable_skips_temp_and_dotfiles(tmp_path):
 
 def test_upload_file_is_idempotent(tmp_path):
     sensor_file = tmp_path / "reading.json"
-    sensor_file.write_text('[{"sensor_id": "s1", "value": 1}]')
+    sensor_file.write_text('[{"timestamp": "2026-01-01T00:00:00Z", "sensor_id": "s1", "value": 1}]')
 
     state = StateStore(tmp_path / "state.json")
     s3_client = MagicMock()
@@ -43,7 +43,7 @@ def test_upload_file_retries_then_succeeds(tmp_path, monkeypatch):
     from botocore.exceptions import ClientError
 
     sensor_file = tmp_path / "reading2.json"
-    sensor_file.write_text('[{"sensor_id": "s1", "value": 1}]')
+    sensor_file.write_text('[{"timestamp": "2026-01-01T00:00:00Z", "sensor_id": "s1", "value": 1}]')
 
     state = StateStore(tmp_path / "state2.json")
     s3_client = MagicMock()
@@ -60,7 +60,7 @@ def test_upload_file_retries_then_succeeds(tmp_path, monkeypatch):
 
 def test_upload_file_deletes_local_file_after_success(tmp_path, monkeypatch):
     sensor_file = tmp_path / "reading3.json"
-    sensor_file.write_text('[{"sensor_id": "s1", "value": 1}]')
+    sensor_file.write_text('[{"timestamp": "2026-01-01T00:00:00Z", "sensor_id": "s1", "value": 1}]')
 
     state = StateStore(tmp_path / "state3.json")
     s3_client = MagicMock()
@@ -76,7 +76,7 @@ def test_upload_file_deletes_local_file_after_success(tmp_path, monkeypatch):
 
 def test_upload_file_deletes_state_recorded_file_when_cleanup_enabled(tmp_path, monkeypatch):
     sensor_file = tmp_path / "reading4.json"
-    sensor_file.write_text('[{"sensor_id": "s1", "value": 1}]')
+    sensor_file.write_text('[{"timestamp": "2026-01-01T00:00:00Z", "sensor_id": "s1", "value": 1}]')
 
     state = StateStore(tmp_path / "state4.json")
     s3_client = MagicMock()
@@ -90,3 +90,27 @@ def test_upload_file_deletes_state_recorded_file_when_cleanup_enabled(tmp_path, 
     assert upload_file(s3_client, sensor_file, state) is True
     assert not sensor_file.exists()
     s3_client.put_object.assert_not_called()
+
+
+def test_upload_file_uploads_directly_to_aws_when_garage_is_disabled(tmp_path, monkeypatch):
+    sensor_file = tmp_path / "reading5.json"
+    sensor_file.write_text('[{"timestamp": "2026-01-01T00:00:00Z", "sensor_id": "s1", "value": 1}]')
+
+    state = StateStore(tmp_path / "state5.json")
+    s3_client = MagicMock()
+    monkeypatch.setattr(garage_uploader, "UPLOAD_TARGET", "aws")
+    monkeypatch.setattr(garage_uploader, "GARAGE", MagicMock(is_configured=MagicMock(return_value=False)))
+    monkeypatch.setattr(garage_uploader, "AWS", MagicMock(raw_bucket="raw-sensor-data-bucket", raw_prefix="raw-sensor-data/", region="us-east-1"))
+    monkeypatch.setattr(garage_uploader, "SYNCTHING", replace(garage_uploader.SYNCTHING, delete_after_upload=True))
+    tagged = {}
+
+    body = b'[{"timestamp": "2026-01-01T00:00:00Z", "sensor_id": "s1", "value": 1}]'
+    sensor_file.write_bytes(body)
+
+    assert upload_file(s3_client, sensor_file, state) is True
+    s3_client.put_object.assert_called_once_with(
+        Bucket="raw-sensor-data-bucket",
+        Key="raw-sensor-data/reading5.json",
+        Body=body,
+    )
+    assert not sensor_file.exists()

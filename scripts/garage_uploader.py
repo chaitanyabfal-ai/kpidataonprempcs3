@@ -41,8 +41,9 @@ from botocore.exceptions import BotoCoreError, ClientError  # noqa: E402
 from watchdog.events import FileSystemEventHandler  # noqa: E402
 from watchdog.observers import Observer  # noqa: E402
 
-from config.aws_config import GARAGE, SYNCTHING, LOG_DIR  # noqa: E402
+from config.aws_config import AWS, GARAGE, SYNCTHING, LOG_DIR, UPLOAD_TARGET  # noqa: E402
 from scripts.utils.logging_config import get_logger  # noqa: E402
+from scripts.utils.schema import validate_bytes  # noqa: E402
 from scripts.utils.state_store import StateStore  # noqa: E402
 
 logger = get_logger("garage_uploader", LOG_DIR / "garage_uploader.log")
@@ -52,6 +53,13 @@ BASE_BACKOFF_SECONDS = 1.5
 
 
 def build_s3_client():
+    if UPLOAD_TARGET == "aws":
+        return boto3.client(
+            "s3",
+            region_name=AWS.region,
+            config=BotoConfig(retries={"max_attempts": 3, "mode": "standard"}),
+        )
+
     if not GARAGE.is_configured():
         logger.warning(
             "GARAGE_ACCESS_KEY_ID / GARAGE_SECRET_ACCESS_KEY are not set — "
@@ -83,14 +91,14 @@ def _is_ignorable(path: Path) -> bool:
 
 
 def upload_file(s3_client, path: Path, state: StateStore) -> bool:
-    """Upload one file to Garage S3 with retry/backoff. Returns True on success."""
+    """Upload one file to the configured target (AWS or Garage) with retry/backoff."""
     key = _state_key(path)
     if state.has(key):
         logger.debug("Skipping already-uploaded file: %s", path.name)
         if SYNCTHING.delete_after_upload:
             try:
                 os.remove(path)
-                logger.info("Deleted local file already staged in Garage: %s", path.name)
+                logger.info("Deleted local file already staged: %s", path.name)
             except FileNotFoundError:
                 pass
             except OSError as exc:
@@ -102,14 +110,29 @@ def upload_file(s3_client, path: Path, state: StateStore) -> bool:
             with open(path, "rb") as f:
                 body = f.read()
             checksum = hashlib.sha256(body).hexdigest()[:16]
-            s3_client.put_object(
-                Bucket=GARAGE.bucket,
-                Key=path.name,
-                Body=body,
-                Metadata={"source-checksum": checksum},
-            )
+
+            if UPLOAD_TARGET == "aws":
+                records, result = validate_bytes(body, path.name)
+                if not result.ok:
+                    logger.warning(
+                        "Rejecting %s: schema validation failed (%d record(s), errors=%s)",
+                        path.name, result.record_count, result.errors[:5],
+                    )
+                    return False
+                dest_key = f"{AWS.raw_prefix.rstrip('/')}/{path.name}"
+                s3_client.put_object(Bucket=AWS.raw_bucket, Key=dest_key, Body=body)
+            else:
+                s3_client.put_object(
+                    Bucket=GARAGE.bucket,
+                    Key=path.name,
+                    Body=body,
+                    Metadata={"source-checksum": checksum},
+                )
+
             state.set(key, {"uploaded_at": time.time(), "checksum": checksum})
-            logger.info("Uploaded %s to Garage S3 (bucket=%s, %d bytes)", path.name, GARAGE.bucket, len(body))
+            target_name = "AWS S3" if UPLOAD_TARGET == "aws" else "Garage S3"
+            target_bucket = AWS.raw_bucket if UPLOAD_TARGET == "aws" else GARAGE.bucket
+            logger.info("Uploaded %s to %s (bucket=%s, %d bytes)", path.name, target_name, target_bucket, len(body))
 
             if SYNCTHING.delete_after_upload:
                 try:

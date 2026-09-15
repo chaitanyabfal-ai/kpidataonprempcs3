@@ -23,4 +23,7 @@ infra/terraform/*.tfstate
 infra/terraform/*.tfstate.backup
 infra/terraform/terraform.tfvars
 
+# Terraform-generated EC2 private key
+sensor-kpi-ec2.pem
+
 .DS_Store

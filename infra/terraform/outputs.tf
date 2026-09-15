@@ -25,3 +25,11 @@ output "ec2_poller_role_arn" {
 output "ec2_instance_id" {
   value = var.create_ec2_instance ? aws_instance.ec2_poller[0].id : null
 }
+
+output "ec2_ssh_key_name" {
+  value = var.ec2_key_name != "" ? var.ec2_key_name : (var.create_ec2_instance && var.create_ec2_ssh_key ? aws_key_pair.ec2_poller[0].key_name : null)
+}
+
+output "ec2_private_key_path" {
+  value = var.create_ec2_instance && var.create_ec2_ssh_key && var.ec2_key_name == "" ? pathexpand(var.ec2_private_key_path) : null
+}

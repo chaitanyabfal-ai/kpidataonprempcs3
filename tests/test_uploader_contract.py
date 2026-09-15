@@ -10,6 +10,7 @@ from unittest.mock import MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.s3_uploader import upload_validated_object  # noqa: E402
+from scripts.utils.schema import validate_bytes  # noqa: E402
 
 
 def test_valid_payload_is_uploaded():
@@ -53,3 +54,14 @@ def test_invalid_json_is_rejected():
 
     assert ok is False
     client.put_object.assert_not_called()
+
+
+def test_sensor_voltage_csv_is_normalized():
+    body = b"Timestamp,Voltage\n1777461878.455297,-0.111\n"
+
+    records, result = validate_bytes(body, "BFA5_Batch71084_2026-09-15.csv")
+
+    assert result.ok is True
+    assert records[0]["sensor_id"] == "BFA5"
+    assert records[0]["value"] == "-0.111"
+    assert records[0]["timestamp"].startswith("2026-")

@@ -67,6 +67,9 @@ class SyncthingConfig:
     delete_after_upload: bool = _env_bool("DELETE_AFTER_UPLOAD", False)
 
 
+UPLOAD_TARGET = os.getenv("UPLOAD_TARGET", "aws")
+
+
 @dataclass(frozen=True)
 class GarageConfig:
     """Garage S3 (reached over Tailscale)."""
@@ -85,7 +88,7 @@ class GarageConfig:
 class AWSConfig:
     """AWS S3 / SNS / SQS."""
 
-    region: str = os.getenv("AWS_REGION", "us-east-1")
+    region: str = os.getenv("AWS_REGION", "ap-south-1")
     raw_bucket: str = os.getenv("AWS_RAW_BUCKET", "raw-sensor-data-bucket")
     raw_prefix: str = os.getenv("AWS_RAW_PREFIX", "raw-sensor-data/")
     sns_topic_arn: str = os.getenv("SNS_TOPIC_ARN", "")

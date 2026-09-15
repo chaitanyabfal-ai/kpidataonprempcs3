@@ -18,6 +18,7 @@ import csv
 import io
 import json
 from dataclasses import dataclass
+from datetime import datetime, timezone
 
 REQUIRED_FIELDS = ("timestamp", "sensor_id", "value")
 
@@ -67,10 +68,35 @@ def validate_csv_bytes(raw: bytes) -> tuple[list[dict], ValidationResult]:
         records = list(reader)
     except (UnicodeDecodeError, csv.Error) as exc:
         return [], ValidationResult(ok=False, record_count=0, errors=[f"invalid CSV: {exc}"])
+    if records and {key.lower() for key in records[0]} >= {"timestamp", "voltage"}:
+        return records, _validate_records(records)
     return records, _validate_records(records)
 
 
 def validate_bytes(raw: bytes, filename: str) -> tuple[list[dict], ValidationResult]:
     if filename.lower().endswith(".csv"):
-        return validate_csv_bytes(raw)
+        try:
+            text = raw.decode("utf-8")
+            source_records = list(csv.DictReader(io.StringIO(text)))
+        except (UnicodeDecodeError, csv.Error) as exc:
+            return [], ValidationResult(ok=False, record_count=0, errors=[f"invalid CSV: {exc}"])
+
+        field_names = {key.lower() for key in (source_records[0] if source_records else {})}
+        if {"timestamp", "voltage"}.issubset(field_names) and not {"sensor_id", "value"}.issubset(field_names):
+            sensor_id = filename.split("_", 1)[0]
+            records = []
+            for row in source_records:
+                raw_timestamp = row.get("Timestamp", row.get("timestamp", ""))
+                raw_value = row.get("Voltage", row.get("voltage", ""))
+                try:
+                    timestamp_value = float(raw_timestamp)
+                    if timestamp_value > 10_000_000_000:
+                        timestamp_value /= 1000
+                    timestamp = datetime.fromtimestamp(timestamp_value, tz=timezone.utc).isoformat()
+                except (TypeError, ValueError, OverflowError, OSError):
+                    timestamp = raw_timestamp
+                records.append({"timestamp": timestamp, "sensor_id": sensor_id, "value": raw_value})
+            return records, _validate_records(records)
+
+        return source_records, _validate_records(source_records)
     return validate_json_bytes(raw)
