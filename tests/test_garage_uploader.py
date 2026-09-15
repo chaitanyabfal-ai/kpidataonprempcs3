@@ -1,10 +1,12 @@
 import sys
 import time
+from dataclasses import replace
 from pathlib import Path
 from unittest.mock import MagicMock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import scripts.garage_uploader as garage_uploader  # noqa: E402
 from scripts.garage_uploader import _is_ignorable, upload_file  # noqa: E402
 from scripts.utils.state_store import StateStore  # noqa: E402
 
@@ -54,3 +56,37 @@ def test_upload_file_retries_then_succeeds(tmp_path, monkeypatch):
 
     assert ok is True
     assert s3_client.put_object.call_count == 2
+
+
+def test_upload_file_deletes_local_file_after_success(tmp_path, monkeypatch):
+    sensor_file = tmp_path / "reading3.json"
+    sensor_file.write_text('[{"sensor_id": "s1", "value": 1}]')
+
+    state = StateStore(tmp_path / "state3.json")
+    s3_client = MagicMock()
+    monkeypatch.setattr(
+        garage_uploader,
+        "SYNCTHING",
+        replace(garage_uploader.SYNCTHING, delete_after_upload=True),
+    )
+
+    assert upload_file(s3_client, sensor_file, state) is True
+    assert not sensor_file.exists()
+
+
+def test_upload_file_deletes_state_recorded_file_when_cleanup_enabled(tmp_path, monkeypatch):
+    sensor_file = tmp_path / "reading4.json"
+    sensor_file.write_text('[{"sensor_id": "s1", "value": 1}]')
+
+    state = StateStore(tmp_path / "state4.json")
+    s3_client = MagicMock()
+    state.set(garage_uploader._state_key(sensor_file), {"uploaded_at": time.time()})
+    monkeypatch.setattr(
+        garage_uploader,
+        "SYNCTHING",
+        replace(garage_uploader.SYNCTHING, delete_after_upload=True),
+    )
+
+    assert upload_file(s3_client, sensor_file, state) is True
+    assert not sensor_file.exists()
+    s3_client.put_object.assert_not_called()

@@ -17,7 +17,9 @@ This document maps each of the requested "new prospects" to what was built.
   - `--backfill` / `--once` modes for catching up an already-populated
     folder
   - structured logging to `data/logs/garage_uploader.log`
-  - optional `DELETE_AFTER_UPLOAD` instead of a commented-out line
+  - `DELETE_AFTER_UPLOAD=true` removes the local Syncthing copy only after
+    Garage confirms `put_object`; previously recorded uploads are also
+    cleaned up during backfill/restart
 
 ## 3. AWS S3 → SNS → SQS fan-out
 - `infra/terraform/s3.tf` + `sns_sqs.tf` + `iam.tf` codify the manual

@@ -9,6 +9,7 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 # edit .env: SYNC_WATCH_DIR, GARAGE_*, AWS_*
+# DELETE_AFTER_UPLOAD=true removes the PC copy after Garage accepts it
 ```
 
 ## B. On-prem + PC: Syncthing

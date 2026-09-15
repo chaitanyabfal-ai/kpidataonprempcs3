@@ -87,6 +87,14 @@ def upload_file(s3_client, path: Path, state: StateStore) -> bool:
     key = _state_key(path)
     if state.has(key):
         logger.debug("Skipping already-uploaded file: %s", path.name)
+        if SYNCTHING.delete_after_upload:
+            try:
+                os.remove(path)
+                logger.info("Deleted local file already staged in Garage: %s", path.name)
+            except FileNotFoundError:
+                pass
+            except OSError as exc:
+                logger.warning("Could not delete %s after upload: %s", path.name, exc)
         return True
 
     for attempt in range(1, MAX_RETRIES + 1):

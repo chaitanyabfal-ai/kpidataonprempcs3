@@ -1,0 +1,31 @@
+2026-09-11T16:01:05+0530 | INFO     | garage_uploader | Uploaded reading.json to Garage S3 (bucket=sensor-data-staging, 33 bytes)
+2026-09-11T16:01:05+0530 | ERROR    | garage_uploader | Upload attempt 1/5 failed for reading2.json: An error occurred (500) when calling the PutObject operation: boom (retrying in 1.5s)
+2026-09-11T16:01:05+0530 | INFO     | garage_uploader | Uploaded reading2.json to Garage S3 (bucket=sensor-data-staging, 33 bytes)
+2026-09-11T16:01:18+0530 | INFO     | garage_uploader | Backfilling 0 existing file(s) from data/incoming_csvs
+2026-09-11T16:01:46+0530 | INFO     | garage_uploader | Backfilling 0 existing file(s) from data/incoming_csvs
+2026-09-11T16:11:39+0530 | INFO     | garage_uploader | Backfilling 4815 existing file(s) from /home/bfa/incoming_sensor_data
+2026-09-11T16:11:41+0530 | ERROR    | garage_uploader | Upload attempt 1/5 failed for BFA10_Batch116_2026-04-29_17-38-26.csv: An error occurred (500) when calling the PutObject operation (reached max retries: 3): Internal Server Error (retrying in 1.5s)
+2026-09-11T16:11:46+0530 | ERROR    | garage_uploader | Upload attempt 2/5 failed for BFA10_Batch116_2026-04-29_17-38-26.csv: An error occurred (500) when calling the PutObject operation (reached max retries: 3): Internal Server Error (retrying in 3.0s)
+2026-09-11T16:11:52+0530 | ERROR    | garage_uploader | Upload attempt 3/5 failed for BFA10_Batch116_2026-04-29_17-38-26.csv: An error occurred (500) when calling the PutObject operation (reached max retries: 3): Internal Server Error (retrying in 6.0s)
+2026-09-11T16:12:02+0530 | ERROR    | garage_uploader | Upload attempt 4/5 failed for BFA10_Batch116_2026-04-29_17-38-26.csv: An error occurred (500) when calling the PutObject operation (reached max retries: 3): Internal Server Error (retrying in 12.0s)
+2026-09-11T16:12:17+0530 | ERROR    | garage_uploader | Upload attempt 5/5 failed for BFA10_Batch116_2026-04-29_17-38-26.csv: An error occurred (500) when calling the PutObject operation (reached max retries: 3): Internal Server Error (retrying in 24.0s)
+2026-09-11T16:12:41+0530 | ERROR    | garage_uploader | Giving up on BFA10_Batch116_2026-04-29_17-38-26.csv after 5 attempts
+2026-09-11T16:12:43+0530 | ERROR    | garage_uploader | Upload attempt 1/5 failed for BFA10_Batch120_2026-04-30_18-33-40.csv: An error occurred (500) when calling the PutObject operation (reached max retries: 3): Internal Server Error (retrying in 1.5s)
+2026-09-15T10:39:50+0530 | INFO     | garage_uploader | Uploaded reading.json to Garage S3 (bucket=sensor-data-staging, 33 bytes)
+2026-09-15T10:39:50+0530 | ERROR    | garage_uploader | Upload attempt 1/5 failed for reading2.json: An error occurred (500) when calling the PutObject operation: boom (retrying in 1.5s)
+2026-09-15T10:39:50+0530 | INFO     | garage_uploader | Uploaded reading2.json to Garage S3 (bucket=sensor-data-staging, 33 bytes)
+2026-09-15T10:39:50+0530 | INFO     | garage_uploader | Uploaded reading3.json to Garage S3 (bucket=sensor-data-staging, 33 bytes)
+2026-09-15T10:39:50+0530 | INFO     | garage_uploader | Deleted local file after staging: reading3.json
+2026-09-15T10:39:50+0530 | INFO     | garage_uploader | Deleted local file already staged in Garage: reading4.json
+2026-09-15T10:40:30+0530 | INFO     | garage_uploader | Uploaded reading.json to Garage S3 (bucket=sensor-data-staging, 33 bytes)
+2026-09-15T10:40:30+0530 | ERROR    | garage_uploader | Upload attempt 1/5 failed for reading2.json: An error occurred (500) when calling the PutObject operation: boom (retrying in 1.5s)
+2026-09-15T10:40:30+0530 | INFO     | garage_uploader | Uploaded reading2.json to Garage S3 (bucket=sensor-data-staging, 33 bytes)
+2026-09-15T10:40:30+0530 | INFO     | garage_uploader | Uploaded reading3.json to Garage S3 (bucket=sensor-data-staging, 33 bytes)
+2026-09-15T10:40:30+0530 | INFO     | garage_uploader | Deleted local file after staging: reading3.json
+2026-09-15T10:40:30+0530 | INFO     | garage_uploader | Deleted local file already staged in Garage: reading4.json
+2026-09-15T10:42:15+0530 | INFO     | garage_uploader | Backfilling 12499 existing file(s) from /home/bfa/incoming_sensor_data
+2026-09-15T10:42:15+0530 | ERROR    | garage_uploader | Upload attempt 1/5 failed for BFA10_Batch112_2026-04-29_17-26-19.csv: An error occurred (NoSuchBucket) when calling the PutObject operation: Bucket not found: sensor-data-staging (retrying in 1.5s)
+2026-09-15T10:42:16+0530 | ERROR    | garage_uploader | Upload attempt 2/5 failed for BFA10_Batch112_2026-04-29_17-26-19.csv: An error occurred (NoSuchBucket) when calling the PutObject operation: Bucket not found: sensor-data-staging (retrying in 3.0s)
+2026-09-15T10:42:20+0530 | ERROR    | garage_uploader | Upload attempt 3/5 failed for BFA10_Batch112_2026-04-29_17-26-19.csv: An error occurred (NoSuchBucket) when calling the PutObject operation: Bucket not found: sensor-data-staging (retrying in 6.0s)
+2026-09-15T10:42:26+0530 | ERROR    | garage_uploader | Upload attempt 4/5 failed for BFA10_Batch112_2026-04-29_17-26-19.csv: An error occurred (NoSuchBucket) when calling the PutObject operation: Bucket not found: sensor-data-staging (retrying in 12.0s)
+2026-09-15T10:42:38+0530 | ERROR    | garage_uploader | Upload attempt 5/5 failed for BFA10_Batch112_2026-04-29_17-26-19.csv: An error occurred (NoSuchBucket) when calling the PutObject operation: Bucket not found: sensor-data-staging (retrying in 24.0s)

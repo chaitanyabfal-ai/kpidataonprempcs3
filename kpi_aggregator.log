@@ -1,0 +1,2 @@
+2026-09-15T10:40:30+0530 | INFO     | kpi_aggregator | Aggregated 3 window report(s) into 2 hourly and 1 daily bucket(s)
+2026-09-15T10:40:30+0530 | INFO     | kpi_aggregator | No window reports found yet — nothing to aggregate.
